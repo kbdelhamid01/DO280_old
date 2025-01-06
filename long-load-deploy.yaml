@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: long-load
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: long-load
+  template:
+    metadata:
+      labels:
+        app: long-load
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: lab-ocp-w1.ocp.labtelco.stc
+      restartPolicy: Always
+      containers:
+      - name: long-load
+        image: docker.io/lmsantosopenshift/long-load:latest
+        resources:
+          requests:
+            memory: "100Gi"
+        securityContext:
+          allowPrivilegeEscalation: false
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: long-load
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: long-load
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: long-load
+spec:
+  port:
+    targetPort: 3000
+  to:
+    kind: Service
+    name: long-load
+
